@@ -1,9 +1,9 @@
 # include <Siv3D.hpp>
 
-bool Button(const Rect& rect, const Font& font, const String& text)
+bool Button(const Rect& rect, const Font& font, const String& text, bool enabled)
 {
 	// マウスカーソルがボタンの上にある場合
-	if (rect.mouseOver())
+	if (enabled && rect.mouseOver())
 	{
 		// マウスカーソルを手の形にする
 		Cursor::RequestStyle(CursorStyle::Hand);
@@ -23,6 +23,15 @@ bool Button(const Rect& rect, const Font& font, const String& text)
 	// テキストを描く
 	font(text).drawAt(40, rect.center(), ColorF{0.4, 0.3, 0.2});
 	
+	// 無効の場合
+	if (!enabled)
+	{
+		// グレーの半透明を重ねる
+		roundRect.draw(ColorF{ 0.8, 0.8 });
+		// ボタンが押せなくなる
+		return false;
+	}
+	
 	// ボタンを左クリックするとtrueを返す
 	return rect.leftClicked();
 }
@@ -37,23 +46,33 @@ void Main()
 	while (System::Update())
 	{
 		// タイトル
-		font(U"Title").draw(80, Vec2{300, 100}, ColorF{0.2});
+		font(U"Title").draw(80, Vec2{300, 150}, ColorF{0.2});
 		
 		// Credit
-		if (Button(Rect{10, 10, 150, 80}, font, U"Credit"))
+		if (Button(Rect{10, 10, 150, 80}, font, U"Credit", true))
 		{
 			Print << U"Credit";
 		}
 		
+		// Tutorial
+		if (Button(Rect{250, 280, 300, 60}, font, U"Tutorial", true))
+		{
+			Print << U"Tutorial";
+		}
+		
 		// Stage1
-		if (Button(Rect{80, 300, 300, 80}, font, U"Stage1"))
+		if (Button(Rect{80, 400, 200, 80}, font, U"Stage1", false))
 		{
 			Print << U"Stage1";
 		}
 		// Stage2
-		if (Button(Rect{420, 300, 300, 80}, font, U"Stage2"))
+		if (Button(Rect{300, 400, 200, 80}, font, U"Stage2", false))
 		{
 			Print << U"Stage2";
+		}
+		if (Button(Rect{520, 400, 200, 80}, font,U"Stage3", false))
+		{
+			Print << U"Stage3";
 		}
 	}
 }
