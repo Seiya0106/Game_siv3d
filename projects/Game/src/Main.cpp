@@ -43,6 +43,11 @@ void Main()
 	
 	const Font font{ FontMethod::MSDF, 48, Typeface::Bold };
 	
+	// ステージが開放しているかどうか
+	bool unlockedStage1 = false;
+	bool unlockedStage2 = false;
+	bool unlockedStage3 = false;
+	
 	while (System::Update())
 	{
 		// タイトル
@@ -58,19 +63,22 @@ void Main()
 		if (Button(Rect{250, 280, 300, 60}, font, U"Tutorial", true))
 		{
 			Print << U"Tutorial";
+			unlockedStage1 = true;
 		}
 		
 		// Stage1
-		if (Button(Rect{80, 400, 200, 80}, font, U"Stage1", false))
+		if (Button(Rect{80, 400, 200, 80}, font, U"Stage1", unlockedStage1))
 		{
 			Print << U"Stage1";
+			unlockedStage2 = true;
 		}
 		// Stage2
-		if (Button(Rect{300, 400, 200, 80}, font, U"Stage2", false))
+		if (Button(Rect{300, 400, 200, 80}, font, U"Stage2", unlockedStage2))
 		{
 			Print << U"Stage2";
+			unlockedStage3 = true;
 		}
-		if (Button(Rect{520, 400, 200, 80}, font,U"Stage3", false))
+		if (Button(Rect{520, 400, 200, 80}, font,U"Stage3", unlockedStage3))
 		{
 			Print << U"Stage3";
 		}
