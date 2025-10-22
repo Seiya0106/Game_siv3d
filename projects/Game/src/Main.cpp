@@ -146,6 +146,7 @@ public:
 		m_font(U"bukinyan").draw(32, Vec2{ 200, 240 }, ColorF{ 0.0 });
 		m_font(U"kanaka").draw(32, Vec2{ 350, 240 }, ColorF{ 0.0 });
 		m_font(U"使用素材").draw(32, Vec2{ 80, 300 }, ColorF{ 0.0 });
+		m_font(U"illustAC: https://www.ac-illust.com/").draw(32, Vec2{ 100, 340 }, ColorF{ 0.0 });
 	}
 private:
 	const Font m_font{ FontMethod::MSDF, 32 };
@@ -158,6 +159,7 @@ public:
 
 	Stage1(const InitData& init)
 		: IScene{ init }
+	    , needle(U"../App/example/needle.png")
 	{
 		Scene::SetBackground(ColorF{ 0.7, 0.9, 1.0 });
 	}
@@ -186,11 +188,15 @@ public:
 		
 		// 境界線ようの縦線
 		Rect{ 230, 0, 10, 600}.draw(ColorF{ 0 });
+		
+		// 針を描画
+		needle.resized(200,200).drawAt(Scene::Center());
 	}
 
 private:
 
 	const Font m_font{ FontMethod::MSDF, 48, Typeface::Bold };
+	const Texture needle;
 };
 
 // ステージ2
