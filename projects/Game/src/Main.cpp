@@ -13,6 +13,7 @@ enum class State
 {
 	Title,
 	Credit,
+	Tutorial,
 	Stage1,
 	Stage2,
 	Stage3,
@@ -82,8 +83,8 @@ public:
 		// Tutorial
 		if (Button(Rect{ 270, 270, 250, 70 }, m_font, U"Tutorial", true))
 		{
-			// Stage1 をアンロック
-			getData().unlockedStage1 = true;
+	        // チュートリアルのシーンに移動
+			changeScene(State::Tutorial);
 		}
 
 		// Stage1
@@ -153,13 +154,60 @@ private:
 };
 
 // ステージ1
+class Tutorial : public App::Scene
+{
+public:
+
+	Tutorial(const InitData& init)
+		: IScene{ init }
+		, needle(U"example/needle.png")
+	{
+		Scene::SetBackground(ColorF{ 0.7, 0.9, 1.0 });
+	}
+
+	void update() override
+	{
+		// 戻るボタン
+		//　現在は戻るだけで次のボタンが押せるようになっている
+		if (Button(Rect{ 10, 10, 200, 70 }, m_font, U"BackMenu", true))
+		{
+			// Stage1 をアンロック
+			getData().unlockedStage1 = true;
+			// タイトルシーンに戻る
+			changeScene(State::Title);
+		}
+		// リスタートボタン
+		if (Button(Rect{ 10, 90, 200, 70}, m_font, U"ReStart", true))
+		{
+			// 処理内容
+			Print << U"Pushed";
+		}
+		// 設置物をおくところの背景
+		Rect{ 40, 170, 130, 130}.draw();
+		Rect{ 40, 310, 130, 130}.draw();
+		Rect{ 40, 450, 130, 130}.draw();
+		
+		// 境界線ようの縦線
+		Rect{ 230, 0, 10, 600}.draw(ColorF{ 0 });
+		
+		// 針を描画
+		needle.resized(150,150).drawAt(Scene::Center());
+	}
+
+private:
+
+	const Font m_font{ FontMethod::MSDF, 48, Typeface::Bold };
+	const Texture needle;
+};
+
+// ステージ1
 class Stage1 : public App::Scene
 {
 public:
 
 	Stage1(const InitData& init)
 		: IScene{ init }
-	    , needle(U"../App/example/needle.png")
+	    , needle(U"example/needle.png")
 	{
 		Scene::SetBackground(ColorF{ 0.7, 0.9, 1.0 });
 	}
@@ -190,7 +238,7 @@ public:
 		Rect{ 230, 0, 10, 600}.draw(ColorF{ 0 });
 		
 		// 針を描画
-		needle.resized(200,200).drawAt(Scene::Center());
+		needle.resized(150,150).drawAt(Scene::Center());
 	}
 
 private:
@@ -289,6 +337,7 @@ void Main()
 	// 各シーンを登録
 	manager.add<Title>(State::Title);
 	manager.add<Credit>(State::Credit);
+	manager.add<Tutorial>(State::Tutorial);
 	manager.add<Stage1>(State::Stage1);
 	manager.add<Stage2>(State::Stage2);
 	manager.add<Stage3>(State::Stage3);
