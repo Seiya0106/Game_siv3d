@@ -37,7 +37,7 @@ struct DraggableCircle : IDraggable
 			{
 				Vec2 newCenter = Cursor::Pos() - dragOffset;
 
-				// 画面内に収める制限
+				// 画面内に収める制限（clamp(制限したい値、最小値の座標、最大値の座標）
 				const Rect sceneRect = Scene::Rect();
 				newCenter.x = Clamp(newCenter.x, shape.r, sceneRect.w - shape.r);
 				newCenter.y = Clamp(newCenter.y, shape.r, sceneRect.h - shape.r);
