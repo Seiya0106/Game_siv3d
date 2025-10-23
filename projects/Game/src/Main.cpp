@@ -83,7 +83,7 @@ public:
 		// Tutorial
 		if (Button(Rect{ 270, 270, 250, 70 }, m_font, U"Tutorial", true))
 		{
-	        // チュートリアルのシーンに移動
+			// チュートリアルのシーンに移動
 			changeScene(State::Tutorial);
 		}
 
@@ -112,7 +112,7 @@ public:
 	void draw() const override
 	{
 		// タイトル
-		m_font(U"Title").draw(80, Vec2{ 300, 150 }, ColorF{ 0.2 });
+		m_font(U"針落").draw(80, Vec2{ 320, 150 }, ColorF{ 0.2 });
 
 		// ボタンの描画は update() 内で完結しているため、ここでは何もしない
 	}
@@ -207,7 +207,7 @@ public:
 
 	Stage1(const InitData& init)
 		: IScene{ init }
-	    , needle(U"example/needle.png")
+		, needle(U"example/needle.png")
 	{
 		Scene::SetBackground(ColorF{ 0.7, 0.9, 1.0 });
 	}
