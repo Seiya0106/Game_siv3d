@@ -17,22 +17,29 @@ struct DraggableCircle : IDraggable
 	bool isDragging = false;
 	Vec2 dragOffset;
 
+	//オブジェクトの初期状態を保存（リセット機構のため）
 	DraggableCircle(const Circle& c) : shape(c), initialShape(c) {}
 
+	//オブジェクトにマウスカーソルがあるか判断して動かす関数
 	void update() override
 	{
+		//マウスカーソルがオブジェクト内にありクリックされているかの判定
 		if (!isDragging && shape.contains(Cursor::Pos()) && MouseL.down())
 		{
 			isDragging = true;
 			dragOffset = Cursor::Pos() - shape.center;
 		}
-
+		//クリック状態での処理
 		if (isDragging)
 		{
+			
+			//クリックを離した時
 			if (MouseL.up())
 			{
 				isDragging = false;
 			}
+			
+			//クリックを押し続けている時
 			else
 			{
 				Vec2 newCenter = Cursor::Pos() - dragOffset;
@@ -41,17 +48,20 @@ struct DraggableCircle : IDraggable
 				const Rect sceneRect = Scene::Rect();
 				newCenter.x = Clamp(newCenter.x, shape.r, sceneRect.w - shape.r);
 				newCenter.y = Clamp(newCenter.y, shape.r, sceneRect.h - shape.r);
-
+				
+				//移動した先のオブジェクトの描写
 				shape.setCenter(newCenter);
 			}
 		}
 	}
-
+	
+	//マウスカーソルがオブジェクト内にあるとき色をかえる関数
 	void draw() const override
 	{
 		shape.draw(shape.contains(Cursor::Pos()) ? ColorF(Palette::Skyblue, 0.5) : ColorF(Palette::Skyblue));
 	}
-
+	
+	//リセットするときの関数
 	void reset() override
 	{
 		shape = initialShape;
