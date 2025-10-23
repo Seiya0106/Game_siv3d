@@ -1,6 +1,6 @@
 # include <Siv3D.hpp>
 
-// 抽象的なインターフェース（IDraggable はインターフェース（抽象クラス）で、ドラッグ可能なオブジェクトの共通機能を定義。）
+// 抽象的なインターフェース（ドラッグ可能なオブジェクトの共通機能）
 struct IDraggable
 {
 	virtual void update() = 0;
@@ -35,14 +35,20 @@ struct DraggableCircle : IDraggable
 			}
 			else
 			{
-				shape.setCenter((Cursor::Pos() - dragOffset).asPoint());
+				Vec2 newCenter = Cursor::Pos() - dragOffset;
+
+				// 画面内に収める制限
+				const Rect sceneRect = Scene::Rect();
+				newCenter.x = Clamp(newCenter.x, shape.r, sceneRect.w - shape.r);
+				newCenter.y = Clamp(newCenter.y, shape.r, sceneRect.h - shape.r);
+
+				shape.setCenter(newCenter);
 			}
 		}
 	}
 
 	void draw() const override
 	{
-		//条件?真の式:偽の式
 		shape.draw(shape.contains(Cursor::Pos()) ? ColorF(Palette::Skyblue, 0.5) : ColorF(Palette::Skyblue));
 	}
 
@@ -78,13 +84,22 @@ struct DraggableRect : IDraggable
 			}
 			else
 			{
-				shape.setCenter((Cursor::Pos() - dragOffset).asPoint());
+				Vec2 newCenter = Cursor::Pos() - dragOffset;
+				
+				// 画面内に収める制限
+				const Rect sceneRect = Scene::Rect();
+				newCenter.x = Clamp(newCenter.x, shape.w / 2.0, sceneRect.w - shape.w / 2.0);
+				newCenter.y = Clamp(newCenter.y, shape.h / 2.0, sceneRect.h - shape.h / 2.0);
+				
+				// 中心から左上座標を計算して再構築
+				shape = Rect{ (newCenter - shape.size / 2).asPoint(), shape.size };
 			}
 		}
 	}
-
+	
 	void draw() const override
-	{   shape.draw(shape.contains(Cursor::Pos())? ColorF(Palette::Lightgreen, 0.5):ColorF(Palette::Lightgreen));
+	{
+		shape.draw(shape.contains(Cursor::Pos()) ? ColorF(Palette::Lightgreen, 0.5) : ColorF(Palette::Lightgreen));
 	}
 
 	void reset() override
@@ -92,7 +107,8 @@ struct DraggableRect : IDraggable
 		shape = initialShape;
 	}
 };
-//メインの実行部分
+
+// メインの実行部分
 void Main()
 {
 	Array<std::shared_ptr<IDraggable>> objects;
@@ -107,7 +123,7 @@ void Main()
 		// Rキーで初期位置に戻す
 		if (KeyR.down())
 		{
-			for (auto& obj : objects)       //objectsに入っている円と四角をobjとして取り出す、objの型をautoで自動推論している
+			for (auto& obj : objects)
 			{
 				obj->reset();
 			}
