@@ -137,6 +137,13 @@ struct DraggableRect : IDraggable
 	}
 };
 
+// 物理エンジン
+struct MyBody
+{
+	P2Body body;
+	double radius;
+};
+
 // GameManager の型エイリアス
 using App = SceneManager<State, GameData>;
 
@@ -279,6 +286,8 @@ public:
 	Tutorial(const InitData& init)
 		: IScene{ init }
 		, needle(U"example/needle.png")
+		, camera{ Vec2{0, -300 }, 1.0 }
+		, accumulatedTime(0.0)
 	{
 		Scene::SetBackground(ColorF{ 0.7, 0.9, 1.0 });
 		// 表示するテキストの配列
@@ -291,6 +300,19 @@ public:
 		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 200, 200, 40 }));
 		objects.push_back(std::make_shared<DraggableRect>(Rect{ 400, 300, 80, 80 }));
 		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 300, 300, 60 }));
+		
+		// 物理ボディ
+		double radius = 10;
+		bodies << MyBody{
+			world.createRect(P2Dynamic, Vec2{-100, -300}, Vec2{10, 120}),
+			radius
+		};
+
+		// 地面
+		// grounds << world.createRect(P2Static, Vec2{ 0, -200 }, SizeF{ 600, 20 });
+		grounds << world.createLine(P2Static, Vec2{ 0, 0 }, Line{ -50, -150, -300, -50 });
+		grounds << world.createLineString(P2Static, Vec2{ 0, 0 },
+		LineString{ Vec2{ 100, -50 }, Vec2{ 200, -50 }, Vec2{ 600, -150 } });
 	}
 
 	void update() override
@@ -317,9 +339,6 @@ public:
 		
 		// 境界線ようの縦線
 		Rect{ 230, 0, 10, 600}.draw(ColorF{ 0 });
-		
-		// 針を描画
-		needle.resized(150,150).drawAt(Scene::Center());
 
 		// --- スクロール関連の定数を計算 ---
 
@@ -412,6 +431,60 @@ public:
 			obj->update();
 			obj->draw();
 		}
+		
+		ClearPrint();
+
+		// 情報表示
+		for (const auto& b : bodies)
+		{
+			Print << U"ID: {}, Pos: {:.1f}"_fmt(b.body.id(), b.body.getPos());
+		}
+
+		// 物理更新
+		accumulatedTime += Scene::DeltaTime();
+		while (accumulatedTime >= StepTime)
+		{
+			world.update(StepTime);
+			accumulatedTime -= StepTime;
+
+			// 落下物の削除
+			for (size_t i = 0; i < bodies.size(); )
+			{
+				if (bodies[i].body.getPos().y > 500)
+				{
+					bodies.remove_at(i);
+				}
+				else
+				{
+					++i;
+				}
+			}
+		}
+
+		// カメラ更新
+		camera.update();
+		const auto t = camera.createTransformer();
+
+		// テクスチャ確認
+		if (!needle)
+		{
+			Print << U"Texture 読み込み失敗";
+		}
+
+		// --- 描画 ---
+
+		// 地面
+		for (const auto& g : grounds)
+		{
+			g.draw(Palette::Gray);
+		}
+
+		// 動く物体
+		for (const auto& b : bodies)
+		{
+			double scale = (b.radius * 2.0) / needle.width();
+			needle.scaled(0.2).rotated(b.body.getAngle()).drawAt(b.body.getPos());
+		}
 	}
 
 private:
@@ -425,6 +498,13 @@ private:
 	Array<String> lines;
 	// 設置物
 	Array<std::shared_ptr<IDraggable>> objects;
+	// 物理関連
+	constexpr static double StepTime = 1.0 / 200.0;
+	double accumulatedTime;
+	P2World world;
+	Array<MyBody> bodies;
+	Array<P2Body> grounds;
+	Camera2D camera;
 };
 
 // ステージ1
@@ -435,6 +515,8 @@ public:
 	Stage1(const InitData& init)
 		: IScene{ init }
 		, needle(U"example/needle.png")
+		, camera{ Vec2{0, -300 }, 1.0 }
+		, accumulatedTime(0.0)
 	{
 		Scene::SetBackground(ColorF{ 0.7, 0.9, 1.0 });
 		// 表示するテキストの配列
@@ -447,6 +529,18 @@ public:
 		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 200, 200, 40 }));
 		objects.push_back(std::make_shared<DraggableRect>(Rect{ 400, 300, 80, 80 }));
 		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 300, 300, 60 }));
+		// 物理ボディ
+		double radius = 10;
+		bodies << MyBody{
+			world.createRect(P2Dynamic, Vec2{-100, -300}, Vec2{10, 120}),
+			radius
+		};
+
+		// 地面
+		// grounds << world.createRect(P2Static, Vec2{ 0, -200 }, SizeF{ 600, 20 });
+		grounds << world.createLine(P2Static, Vec2{ 0, 0 }, Line{ -50, -150, -300, -50 });
+		grounds << world.createLineString(P2Static, Vec2{ 0, 0 },
+		LineString{ Vec2{ 100, -50 }, Vec2{ 200, -50 }, Vec2{ 600, -150 } });
 	}
 
 	void update() override
@@ -473,9 +567,6 @@ public:
 		
 		// 境界線ようの縦線
 		Rect{ 230, 0, 10, 600}.draw(ColorF{ 0 });
-		
-		// 針を描画
-		needle.resized(150,150).drawAt(Scene::Center());
 
 		// --- スクロール関連の定数を計算 ---
 
@@ -569,6 +660,60 @@ public:
 			obj->update();
 			obj->draw();
 		}
+		
+		ClearPrint();
+
+		// 情報表示
+		for (const auto& b : bodies)
+		{
+			Print << U"ID: {}, Pos: {:.1f}"_fmt(b.body.id(), b.body.getPos());
+		}
+
+		// 物理更新
+		accumulatedTime += Scene::DeltaTime();
+		while (accumulatedTime >= StepTime)
+		{
+			world.update(StepTime);
+			accumulatedTime -= StepTime;
+
+			// 落下物の削除
+			for (size_t i = 0; i < bodies.size(); )
+			{
+				if (bodies[i].body.getPos().y > 500)
+				{
+					bodies.remove_at(i);
+				}
+				else
+				{
+					++i;
+				}
+			}
+		}
+
+		// カメラ更新
+		camera.update();
+		const auto t = camera.createTransformer();
+
+		// テクスチャ確認
+		if (!needle)
+		{
+			Print << U"Texture 読み込み失敗";
+		}
+
+		// --- 描画 ---
+
+		// 地面
+		for (const auto& g : grounds)
+		{
+			g.draw(Palette::Gray);
+		}
+
+		// 動く物体
+		for (const auto& b : bodies)
+		{
+			double scale = (b.radius * 2.0) / needle.width();
+			needle.scaled(0.2).rotated(b.body.getAngle()).drawAt(b.body.getPos());
+		}
 	}
 
 private:
@@ -582,6 +727,13 @@ private:
 	Array<String> lines;
 	// 設置物
 	Array<std::shared_ptr<IDraggable>> objects;
+	// 物理関連
+	constexpr static double StepTime = 1.0 / 200.0;
+	double accumulatedTime;
+	P2World world;
+	Array<MyBody> bodies;
+	Array<P2Body> grounds;
+	Camera2D camera;
 };
 
 // ステージ2
@@ -591,6 +743,9 @@ public:
 
 	Stage2(const InitData& init)
 		: IScene{ init }
+		, needle(U"example/needle.png")
+		, camera{ Vec2{0, -300 }, 1.0 }
+		, accumulatedTime(0.0)
 	{
 		Scene::SetBackground(ColorF{ 0.7, 0.9, 1.0 });
 		// 表示するテキストの配列
@@ -603,6 +758,18 @@ public:
 		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 200, 200, 40 }));
 		objects.push_back(std::make_shared<DraggableRect>(Rect{ 400, 300, 80, 80 }));
 		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 300, 300, 60 }));
+		// 物理ボディ
+		double radius = 10;
+		bodies << MyBody{
+			world.createRect(P2Dynamic, Vec2{-100, -300}, Vec2{10, 120}),
+			radius
+		};
+
+		// 地面
+		// grounds << world.createRect(P2Static, Vec2{ 0, -200 }, SizeF{ 600, 20 });
+		grounds << world.createLine(P2Static, Vec2{ 0, 0 }, Line{ -50, -150, -300, -50 });
+		grounds << world.createLineString(P2Static, Vec2{ 0, 0 },
+		LineString{ Vec2{ 100, -50 }, Vec2{ 200, -50 }, Vec2{ 600, -150 } });
 	}
 
 	void update() override
@@ -721,11 +888,66 @@ public:
 			obj->update();
 			obj->draw();
 		}
+		
+		ClearPrint();
+
+		// 情報表示
+		for (const auto& b : bodies)
+		{
+			Print << U"ID: {}, Pos: {:.1f}"_fmt(b.body.id(), b.body.getPos());
+		}
+
+		// 物理更新
+		accumulatedTime += Scene::DeltaTime();
+		while (accumulatedTime >= StepTime)
+		{
+			world.update(StepTime);
+			accumulatedTime -= StepTime;
+
+			// 落下物の削除
+			for (size_t i = 0; i < bodies.size(); )
+			{
+				if (bodies[i].body.getPos().y > 500)
+				{
+					bodies.remove_at(i);
+				}
+				else
+				{
+					++i;
+				}
+			}
+		}
+
+		// カメラ更新
+		camera.update();
+		const auto t = camera.createTransformer();
+
+		// テクスチャ確認
+		if (!needle)
+		{
+			Print << U"Texture 読み込み失敗";
+		}
+
+		// --- 描画 ---
+
+		// 地面
+		for (const auto& g : grounds)
+		{
+			g.draw(Palette::Gray);
+		}
+
+		// 動く物体
+		for (const auto& b : bodies)
+		{
+			double scale = (b.radius * 2.0) / needle.width();
+			needle.scaled(0.2).rotated(b.body.getAngle()).drawAt(b.body.getPos());
+		}
 	}
 
 private:
 
 	const Font m_font{ FontMethod::MSDF, 48, Typeface::Bold };
+	const Texture needle;
 	// --- スクロール関連 ---
 	double scrollY = 0.0;
 	const double scrollSpeed = 40.0;
@@ -733,6 +955,13 @@ private:
 	Array<String> lines;
 	// 設置物
 	Array<std::shared_ptr<IDraggable>> objects;
+	// 物理関連
+	constexpr static double StepTime = 1.0 / 200.0;
+	double accumulatedTime;
+	P2World world;
+	Array<MyBody> bodies;
+	Array<P2Body> grounds;
+	Camera2D camera;
 };
 
 //　ステージ3
@@ -742,6 +971,9 @@ public:
 
 	Stage3(const InitData& init)
 		: IScene{ init }
+		, needle(U"example/needle.png")
+		, camera{ Vec2{0, -300 }, 1.0 }
+		, accumulatedTime(0.0)
 	{
 		Scene::SetBackground(ColorF{ 0.7, 0.9, 1.0 });
 		// 表示するテキストの配列
@@ -753,6 +985,18 @@ public:
 		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 200, 200, 40 }));
 		objects.push_back(std::make_shared<DraggableRect>(Rect{ 400, 300, 80, 80 }));
 		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 300, 300, 60 }));
+		// 物理ボディ
+		double radius = 10;
+		bodies << MyBody{
+			world.createRect(P2Dynamic, Vec2{-100, -300}, Vec2{10, 120}),
+			radius
+		};
+
+		// 地面
+		// grounds << world.createRect(P2Static, Vec2{ 0, -200 }, SizeF{ 600, 20 });
+		grounds << world.createLine(P2Static, Vec2{ 0, 0 }, Line{ -50, -150, -300, -50 });
+		grounds << world.createLineString(P2Static, Vec2{ 0, 0 },
+		LineString{ Vec2{ 100, -50 }, Vec2{ 200, -50 }, Vec2{ 600, -150 } });
 	}
 
 	void update() override
@@ -869,11 +1113,66 @@ public:
 			obj->update();
 			obj->draw();
 		}
+		
+		ClearPrint();
+
+		// 情報表示
+		for (const auto& b : bodies)
+		{
+			Print << U"ID: {}, Pos: {:.1f}"_fmt(b.body.id(), b.body.getPos());
+		}
+
+		// 物理更新
+		accumulatedTime += Scene::DeltaTime();
+		while (accumulatedTime >= StepTime)
+		{
+			world.update(StepTime);
+			accumulatedTime -= StepTime;
+
+			// 落下物の削除
+			for (size_t i = 0; i < bodies.size(); )
+			{
+				if (bodies[i].body.getPos().y > 500)
+				{
+					bodies.remove_at(i);
+				}
+				else
+				{
+					++i;
+				}
+			}
+		}
+
+		// カメラ更新
+		camera.update();
+		const auto t = camera.createTransformer();
+
+		// テクスチャ確認
+		if (!needle)
+		{
+			Print << U"Texture 読み込み失敗";
+		}
+
+		// --- 描画 ---
+
+		// 地面
+		for (const auto& g : grounds)
+		{
+			g.draw(Palette::Gray);
+		}
+
+		// 動く物体
+		for (const auto& b : bodies)
+		{
+			double scale = (b.radius * 2.0) / needle.width();
+			needle.scaled(0.2).rotated(b.body.getAngle()).drawAt(b.body.getPos());
+		}
 	}
 
 private:
 
 	const Font m_font{ FontMethod::MSDF, 48, Typeface::Bold };
+	const Texture needle;
 	// --- スクロール関連 ---
 	double scrollY = 0.0;
 	const double scrollSpeed = 40.0;
@@ -881,6 +1180,13 @@ private:
 	Array<String> lines;
 	// 設置物
 	Array<std::shared_ptr<IDraggable>> objects;
+	// 物理関連
+	constexpr static double StepTime = 1.0 / 200.0;
+	double accumulatedTime;
+	P2World world;
+	Array<MyBody> bodies;
+	Array<P2Body> grounds;
+	Camera2D camera;
 };
 
 
