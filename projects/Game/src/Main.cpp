@@ -13,6 +13,7 @@ enum class State
 {
 	Title,
 	Credit,
+	Tutorial,
 	Stage1,
 	Stage2,
 	Stage3,
@@ -82,8 +83,8 @@ public:
 		// Tutorial
 		if (Button(Rect{ 270, 270, 250, 70 }, m_font, U"Tutorial", true))
 		{
-			// Stage1 をアンロック
-			getData().unlockedStage1 = true;
+			// チュートリアルのシーンに移動
+			changeScene(State::Tutorial);
 		}
 
 		// Stage1
@@ -111,7 +112,7 @@ public:
 	void draw() const override
 	{
 		// タイトル
-		m_font(U"Title").draw(80, Vec2{ 300, 150 }, ColorF{ 0.2 });
+		m_font(U"針落").draw(80, Vec2{ 320, 150 }, ColorF{ 0.2 });
 
 		// ボタンの描画は update() 内で完結しているため、ここでは何もしない
 	}
@@ -146,9 +147,143 @@ public:
 		m_font(U"bukinyan").draw(32, Vec2{ 200, 240 }, ColorF{ 0.0 });
 		m_font(U"kanaka").draw(32, Vec2{ 350, 240 }, ColorF{ 0.0 });
 		m_font(U"使用素材").draw(32, Vec2{ 80, 300 }, ColorF{ 0.0 });
+		m_font(U"illustAC: https://www.ac-illust.com/").draw(32, Vec2{ 100, 340 }, ColorF{ 0.0 });
 	}
 private:
 	const Font m_font{ FontMethod::MSDF, 32 };
+};
+
+// ステージ1
+class Tutorial : public App::Scene
+{
+public:
+
+	Tutorial(const InitData& init)
+		: IScene{ init }
+		, needle(U"example/needle.png")
+	{
+		Scene::SetBackground(ColorF{ 0.7, 0.9, 1.0 });
+		// 表示するテキストの配列
+		for (int i = 0; i < 20; ++i)
+		{
+			lines << U"サンプル行 {}"_fmt(i + 1);
+		}
+	}
+
+	void update() override
+	{
+		// 戻るボタン
+		//　現在は戻るだけで次のボタンが押せるようになっている
+		if (Button(Rect{ 10, 10, 200, 70 }, m_font, U"BackMenu", true))
+		{
+			// Stage1 をアンロック
+			getData().unlockedStage1 = true;
+			// タイトルシーンに戻る
+			changeScene(State::Title);
+		}
+		// リスタートボタン
+		if (Button(Rect{ 10, 90, 200, 70}, m_font, U"ReStart", true))
+		{
+			// 処理内容
+			Print << U"Pushed";
+		}
+		// 設置物をおくところの背景
+		Rect{ 40, 170, 130, 130}.draw();
+		Rect{ 40, 310, 130, 130}.draw();
+		Rect{ 40, 450, 130, 130}.draw();
+		
+		// 境界線ようの縦線
+		Rect{ 230, 0, 10, 600}.draw(ColorF{ 0 });
+		
+		// 針を描画
+		needle.resized(150,150).drawAt(Scene::Center());
+
+		// --- スクロール関連の定数を計算 ---
+
+		// 全コンテンツの高さを計算 (行数 × 1行の高さ)
+		const double contentHeight = lines.size() * 40.0;
+
+		// 画面（表示領域）の高さを取得
+		const double viewHeight = Scene::Height();
+
+		// テキストの上側の余白
+		const double topMargin = 50.0;
+
+		// スクロール可能な最大量を計算
+		// (コンテンツが画面より大きい場合のみ、スクロール量が発生)
+		const double maxScroll = (contentHeight > viewHeight) ? (contentHeight - viewHeight + topMargin) : 0.0;
+
+		// --- 入力処理 ---
+
+		// マウスホイールの移動量に応じてスクロール位置を更新
+		scrollY += Mouse::Wheel() * scrollSpeed;
+
+		// --- スクロールバーの計算 ---
+
+		// スクロールバーの領域を定義 (画面右端、幅 20px)
+		const RectF scrollbarArea(Scene::Width() - 20, 0, 20, Scene::Height());
+
+		// スクロールバーのつまみ(サム)の Rect を用意
+		RectF thumb(scrollbarArea.x, 0, scrollbarArea.w, 0);
+
+		// コンテンツが画面より大きい場合のみ、つまみを計算して表示
+		if (contentHeight > viewHeight)
+		{
+			// つまみの高さを 200px に固定
+			thumb.h = 200;
+			// 現在のスクロール位置(scrollY)を、つまみのY座標に変換
+			thumb.y = scrollbarArea.y + scrollY / maxScroll * (scrollbarArea.h - thumb.h);
+		}
+
+		// スクロールバーに対するマウス操作
+		if (scrollbarArea.leftClicked())
+		{
+			// スクロールバーの領域をクリックしたら、その位置につまみが移動するようにスクロール量を逆算
+			const double newThumbY = Clamp(Cursor::Pos().y - thumb.h / 2, scrollbarArea.y, scrollbarArea.y + scrollbarArea.h - thumb.h);
+			scrollY = (newThumbY - scrollbarArea.y) / (scrollbarArea.h - thumb.h) * maxScroll;
+		}
+		else if (thumb.leftPressed())
+		{
+			// つまみをドラッグしている間の処理
+			const double mouseY = Cursor::Pos().y;
+			// マウスのY座標に合わせてつまみを移動
+			const double newThumbY = Clamp(mouseY - (mouseY - thumb.y), scrollbarArea.y, scrollbarArea.y + scrollbarArea.h - thumb.h);
+			// つまみの位置からスクロール量を逆算
+			scrollY = (newThumbY - scrollbarArea.y) / (scrollbarArea.h - thumb.h) * maxScroll;
+		}
+
+		// --- スクロール位置の最終調整 ---
+
+		// スクロール量が 0.0 ～ maxScroll の範囲に収まるように制限
+		scrollY = Clamp(scrollY, 0.0, maxScroll);
+
+		// --- 描画処理 ---
+
+		// テキストを描画 (スクロール位置 scrollY を引くことで、表示位置を動かす)
+		for (int i = 0; i < lines.size(); ++i)
+		{
+			scrollFont(lines[i]).draw(250, 50 + i * 40 - scrollY);
+		}
+
+		// スクロールバーを描画 (コンテンツが画面より大きい場合のみ)
+		if (contentHeight > viewHeight)
+		{
+			// スクロールバーの背景(トラック)を灰色で描画
+			scrollbarArea.draw(ColorF(0.5));
+			// つまみ(サム)を明るい灰色で描画
+			thumb.draw(ColorF(0.9));
+		}
+	}
+
+private:
+
+	const Font m_font{ FontMethod::MSDF, 48, Typeface::Bold };
+	const Texture needle;
+	// --- スクロール関連 ---
+	double scrollY = 0.0;
+	const double scrollSpeed = 40.0;
+	const Font scrollFont{ 30 };
+	Array<String> lines;
 };
 
 // ステージ1
@@ -158,8 +293,14 @@ public:
 
 	Stage1(const InitData& init)
 		: IScene{ init }
+		, needle(U"example/needle.png")
 	{
 		Scene::SetBackground(ColorF{ 0.7, 0.9, 1.0 });
+		// 表示するテキストの配列
+		for (int i = 0; i < 20; ++i)
+		{
+			lines << U"サンプル行 {}"_fmt(i + 1);
+		}
 	}
 
 	void update() override
@@ -186,11 +327,96 @@ public:
 		
 		// 境界線ようの縦線
 		Rect{ 230, 0, 10, 600}.draw(ColorF{ 0 });
+		
+		// 針を描画
+		needle.resized(150,150).drawAt(Scene::Center());
+
+		// --- スクロール関連の定数を計算 ---
+
+		// 全コンテンツの高さを計算 (行数 × 1行の高さ)
+		const double contentHeight = lines.size() * 40.0;
+
+		// 画面（表示領域）の高さを取得
+		const double viewHeight = Scene::Height();
+
+		// テキストの上側の余白
+		const double topMargin = 50.0;
+
+		// スクロール可能な最大量を計算
+		// (コンテンツが画面より大きい場合のみ、スクロール量が発生)
+		const double maxScroll = (contentHeight > viewHeight) ? (contentHeight - viewHeight + topMargin) : 0.0;
+
+		// --- 入力処理 ---
+
+		// マウスホイールの移動量に応じてスクロール位置を更新
+		scrollY += Mouse::Wheel() * scrollSpeed;
+
+		// --- スクロールバーの計算 ---
+
+		// スクロールバーの領域を定義 (画面右端、幅 20px)
+		const RectF scrollbarArea(Scene::Width() - 20, 0, 20, Scene::Height());
+
+		// スクロールバーのつまみ(サム)の Rect を用意
+		RectF thumb(scrollbarArea.x, 0, scrollbarArea.w, 0);
+
+		// コンテンツが画面より大きい場合のみ、つまみを計算して表示
+		if (contentHeight > viewHeight)
+		{
+			// つまみの高さを 200px に固定
+			thumb.h = 200;
+			// 現在のスクロール位置(scrollY)を、つまみのY座標に変換
+			thumb.y = scrollbarArea.y + scrollY / maxScroll * (scrollbarArea.h - thumb.h);
+		}
+
+		// スクロールバーに対するマウス操作
+		if (scrollbarArea.leftClicked())
+		{
+			// スクロールバーの領域をクリックしたら、その位置につまみが移動するようにスクロール量を逆算
+			const double newThumbY = Clamp(Cursor::Pos().y - thumb.h / 2, scrollbarArea.y, scrollbarArea.y + scrollbarArea.h - thumb.h);
+			scrollY = (newThumbY - scrollbarArea.y) / (scrollbarArea.h - thumb.h) * maxScroll;
+		}
+		else if (thumb.leftPressed())
+		{
+			// つまみをドラッグしている間の処理
+			const double mouseY = Cursor::Pos().y;
+			// マウスのY座標に合わせてつまみを移動
+			const double newThumbY = Clamp(mouseY - (mouseY - thumb.y), scrollbarArea.y, scrollbarArea.y + scrollbarArea.h - thumb.h);
+			// つまみの位置からスクロール量を逆算
+			scrollY = (newThumbY - scrollbarArea.y) / (scrollbarArea.h - thumb.h) * maxScroll;
+		}
+
+		// --- スクロール位置の最終調整 ---
+
+		// スクロール量が 0.0 ～ maxScroll の範囲に収まるように制限
+		scrollY = Clamp(scrollY, 0.0, maxScroll);
+
+		// --- 描画処理 ---
+
+		// テキストを描画 (スクロール位置 scrollY を引くことで、表示位置を動かす)
+		for (int i = 0; i < lines.size(); ++i)
+		{
+			scrollFont(lines[i]).draw(250, 50 + i * 40 - scrollY);
+		}
+
+		// スクロールバーを描画 (コンテンツが画面より大きい場合のみ)
+		if (contentHeight > viewHeight)
+		{
+			// スクロールバーの背景(トラック)を灰色で描画
+			scrollbarArea.draw(ColorF(0.5));
+			// つまみ(サム)を明るい灰色で描画
+			thumb.draw(ColorF(0.9));
+		}
 	}
 
 private:
 
 	const Font m_font{ FontMethod::MSDF, 48, Typeface::Bold };
+	const Texture needle;
+	// --- スクロール関連 ---
+	double scrollY = 0.0;
+	const double scrollSpeed = 40.0;
+	const Font scrollFont{ 30 };
+	Array<String> lines;
 };
 
 // ステージ2
@@ -202,6 +428,11 @@ public:
 		: IScene{ init }
 	{
 		Scene::SetBackground(ColorF{ 0.7, 0.9, 1.0 });
+		// 表示するテキストの配列
+		for (int i = 0; i < 20; ++i)
+		{
+			lines << U"サンプル行 {}"_fmt(i + 1);
+		}
 	}
 
 	void update() override
@@ -228,11 +459,92 @@ public:
 		
 		// 境界線ようの縦線
 		Rect{ 230, 0, 10, 600}.draw(ColorF{ 0 });
+
+		// --- スクロール関連の定数を計算 ---
+
+		// 全コンテンツの高さを計算 (行数 × 1行の高さ)
+		const double contentHeight = lines.size() * 40.0;
+
+		// 画面（表示領域）の高さを取得
+		const double viewHeight = Scene::Height();
+
+		// テキストの上側の余白
+		const double topMargin = 50.0;
+
+		// スクロール可能な最大量を計算
+		// (コンテンツが画面より大きい場合のみ、スクロール量が発生)
+		const double maxScroll = (contentHeight > viewHeight) ? (contentHeight - viewHeight + topMargin) : 0.0;
+
+		// --- 入力処理 ---
+
+		// マウスホイールの移動量に応じてスクロール位置を更新
+		scrollY += Mouse::Wheel() * scrollSpeed;
+
+		// --- スクロールバーの計算 ---
+
+		// スクロールバーの領域を定義 (画面右端、幅 20px)
+		const RectF scrollbarArea(Scene::Width() - 20, 0, 20, Scene::Height());
+
+		// スクロールバーのつまみ(サム)の Rect を用意
+		RectF thumb(scrollbarArea.x, 0, scrollbarArea.w, 0);
+
+		// コンテンツが画面より大きい場合のみ、つまみを計算して表示
+		if (contentHeight > viewHeight)
+		{
+			// つまみの高さを 200px に固定
+			thumb.h = 200;
+			// 現在のスクロール位置(scrollY)を、つまみのY座標に変換
+			thumb.y = scrollbarArea.y + scrollY / maxScroll * (scrollbarArea.h - thumb.h);
+		}
+
+		// スクロールバーに対するマウス操作
+		if (scrollbarArea.leftClicked())
+		{
+			// スクロールバーの領域をクリックしたら、その位置につまみが移動するようにスクロール量を逆算
+			const double newThumbY = Clamp(Cursor::Pos().y - thumb.h / 2, scrollbarArea.y, scrollbarArea.y + scrollbarArea.h - thumb.h);
+			scrollY = (newThumbY - scrollbarArea.y) / (scrollbarArea.h - thumb.h) * maxScroll;
+		}
+		else if (thumb.leftPressed())
+		{
+			// つまみをドラッグしている間の処理
+			const double mouseY = Cursor::Pos().y;
+			// マウスのY座標に合わせてつまみを移動
+			const double newThumbY = Clamp(mouseY - (mouseY - thumb.y), scrollbarArea.y, scrollbarArea.y + scrollbarArea.h - thumb.h);
+			// つまみの位置からスクロール量を逆算
+			scrollY = (newThumbY - scrollbarArea.y) / (scrollbarArea.h - thumb.h) * maxScroll;
+		}
+
+		// --- スクロール位置の最終調整 ---
+
+		// スクロール量が 0.0 ～ maxScroll の範囲に収まるように制限
+		scrollY = Clamp(scrollY, 0.0, maxScroll);
+
+		// --- 描画処理 ---
+
+		// テキストを描画 (スクロール位置 scrollY を引くことで、表示位置を動かす)
+		for (int i = 0; i < lines.size(); ++i)
+		{
+			scrollFont(lines[i]).draw(250, 50 + i * 40 - scrollY);
+		}
+
+		// スクロールバーを描画 (コンテンツが画面より大きい場合のみ)
+		if (contentHeight > viewHeight)
+		{
+			// スクロールバーの背景(トラック)を灰色で描画
+			scrollbarArea.draw(ColorF(0.5));
+			// つまみ(サム)を明るい灰色で描画
+			thumb.draw(ColorF(0.9));
+		}
 	}
 
 private:
 
 	const Font m_font{ FontMethod::MSDF, 48, Typeface::Bold };
+	// --- スクロール関連 ---
+	double scrollY = 0.0;
+	const double scrollSpeed = 40.0;
+	const Font scrollFont{ 30 };
+	Array<String> lines;
 };
 
 //　ステージ3
@@ -244,6 +556,11 @@ public:
 		: IScene{ init }
 	{
 		Scene::SetBackground(ColorF{ 0.7, 0.9, 1.0 });
+		// 表示するテキストの配列
+		for (int i = 0; i < 20; ++i)
+		{
+			lines << U"サンプル行 {}"_fmt(i + 1);
+		}
 	}
 
 	void update() override
@@ -267,11 +584,92 @@ public:
 		
 		// 境界線ようの縦線
 		Rect{ 230, 0, 10, 600}.draw(ColorF{ 0 });
+
+		// --- スクロール関連の定数を計算 ---
+
+		// 全コンテンツの高さを計算 (行数 × 1行の高さ)
+		const double contentHeight = lines.size() * 40.0;
+
+		// 画面（表示領域）の高さを取得
+		const double viewHeight = Scene::Height();
+
+		// テキストの上側の余白
+		const double topMargin = 50.0;
+
+		// スクロール可能な最大量を計算
+		// (コンテンツが画面より大きい場合のみ、スクロール量が発生)
+		const double maxScroll = (contentHeight > viewHeight) ? (contentHeight - viewHeight + topMargin) : 0.0;
+
+		// --- 入力処理 ---
+
+		// マウスホイールの移動量に応じてスクロール位置を更新
+		scrollY += Mouse::Wheel() * scrollSpeed;
+
+		// --- スクロールバーの計算 ---
+
+		// スクロールバーの領域を定義 (画面右端、幅 20px)
+		const RectF scrollbarArea(Scene::Width() - 20, 0, 20, Scene::Height());
+
+		// スクロールバーのつまみ(サム)の Rect を用意
+		RectF thumb(scrollbarArea.x, 0, scrollbarArea.w, 0);
+
+		// コンテンツが画面より大きい場合のみ、つまみを計算して表示
+		if (contentHeight > viewHeight)
+		{
+			// つまみの高さを 200px に固定
+			thumb.h = 200;
+			// 現在のスクロール位置(scrollY)を、つまみのY座標に変換
+			thumb.y = scrollbarArea.y + scrollY / maxScroll * (scrollbarArea.h - thumb.h);
+		}
+
+		// スクロールバーに対するマウス操作
+		if (scrollbarArea.leftClicked())
+		{
+			// スクロールバーの領域をクリックしたら、その位置につまみが移動するようにスクロール量を逆算
+			const double newThumbY = Clamp(Cursor::Pos().y - thumb.h / 2, scrollbarArea.y, scrollbarArea.y + scrollbarArea.h - thumb.h);
+			scrollY = (newThumbY - scrollbarArea.y) / (scrollbarArea.h - thumb.h) * maxScroll;
+		}
+		else if (thumb.leftPressed())
+		{
+			// つまみをドラッグしている間の処理
+			const double mouseY = Cursor::Pos().y;
+			// マウスのY座標に合わせてつまみを移動
+			const double newThumbY = Clamp(mouseY - (mouseY - thumb.y), scrollbarArea.y, scrollbarArea.y + scrollbarArea.h - thumb.h);
+			// つまみの位置からスクロール量を逆算
+			scrollY = (newThumbY - scrollbarArea.y) / (scrollbarArea.h - thumb.h) * maxScroll;
+		}
+
+		// --- スクロール位置の最終調整 ---
+
+		// スクロール量が 0.0 ～ maxScroll の範囲に収まるように制限
+		scrollY = Clamp(scrollY, 0.0, maxScroll);
+
+		// --- 描画処理 ---
+
+		// テキストを描画 (スクロール位置 scrollY を引くことで、表示位置を動かす)
+		for (int i = 0; i < lines.size(); ++i)
+		{
+			scrollFont(lines[i]).draw(250, 50 + i * 40 - scrollY);
+		}
+
+		// スクロールバーを描画 (コンテンツが画面より大きい場合のみ)
+		if (contentHeight > viewHeight)
+		{
+			// スクロールバーの背景(トラック)を灰色で描画
+			scrollbarArea.draw(ColorF(0.5));
+			// つまみ(サム)を明るい灰色で描画
+			thumb.draw(ColorF(0.9));
+		}
 	}
 
 private:
 
 	const Font m_font{ FontMethod::MSDF, 48, Typeface::Bold };
+	// --- スクロール関連 ---
+	double scrollY = 0.0;
+	const double scrollSpeed = 40.0;
+	const Font scrollFont{ 30 };
+	Array<String> lines;
 };
 
 
@@ -283,6 +681,7 @@ void Main()
 	// 各シーンを登録
 	manager.add<Title>(State::Title);
 	manager.add<Credit>(State::Credit);
+	manager.add<Tutorial>(State::Tutorial);
 	manager.add<Stage1>(State::Stage1);
 	manager.add<Stage2>(State::Stage2);
 	manager.add<Stage3>(State::Stage3);
