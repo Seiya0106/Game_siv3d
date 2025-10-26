@@ -297,9 +297,9 @@ public:
 		}
 		
 		// 円と四角形を追加
-		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 200, 200, 40 }));
-		objects.push_back(std::make_shared<DraggableRect>(Rect{ 400, 300, 80, 80 }));
-		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 300, 300, 60 }));
+		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 105, 235, 40 }));
+		objects.push_back(std::make_shared<DraggableRect>(Rect{ 65, 340, 80, 80 }));
+		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 105, 515, 60 }));
 		
 		// 物理ボディ
 		double radius = 10;
@@ -327,10 +327,13 @@ public:
 			changeScene(State::Title);
 		}
 		// リスタートボタン
-		if (Button(Rect{ 10, 90, 200, 70}, m_font, U"ReStart", true))
+		if (Button(Rect{ 10, 90, 200, 70}, m_font, U"ReSet", true))
 		{
 			// 処理内容
-			Print << U"Pushed";
+			for (auto& obj : objects)
+			{
+				obj->reset();
+			}
 		}
 		// 設置物をおくところの背景
 		Rect{ 40, 170, 130, 130}.draw();
@@ -526,9 +529,9 @@ public:
 		}
 		
 		// 円と四角形を追加
-		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 200, 200, 40 }));
-		objects.push_back(std::make_shared<DraggableRect>(Rect{ 400, 300, 80, 80 }));
-		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 300, 300, 60 }));
+		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 105, 235, 40 }));
+		objects.push_back(std::make_shared<DraggableRect>(Rect{ 65, 340, 80, 80 }));
+		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 105, 515, 60 }));
 		// 物理ボディ
 		double radius = 10;
 		bodies << MyBody{
@@ -555,10 +558,13 @@ public:
 			changeScene(State::Title);
 		}
 		// リスタートボタン
-		if (Button(Rect{ 10, 90, 200, 70}, m_font, U"ReStart", true))
+		if (Button(Rect{ 10, 90, 200, 70}, m_font, U"ReSet", true))
 		{
 			// 処理内容
-			Print << U"Pushed";
+			for (auto& obj : objects)
+			{
+				obj->reset();
+			}
 		}
 		// 設置物をおくところの背景
 		Rect{ 40, 170, 130, 130}.draw();
@@ -755,9 +761,9 @@ public:
 		}
 		
 		// 円と四角形を追加
-		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 200, 200, 40 }));
-		objects.push_back(std::make_shared<DraggableRect>(Rect{ 400, 300, 80, 80 }));
-		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 300, 300, 60 }));
+		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 105, 235, 40 }));
+		objects.push_back(std::make_shared<DraggableRect>(Rect{ 65, 340, 80, 80 }));
+		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 105, 515, 60 }));
 		// 物理ボディ
 		double radius = 10;
 		bodies << MyBody{
@@ -784,10 +790,13 @@ public:
 			changeScene(State::Title);
 		}
 		// リスタートボタン
-		if (Button(Rect{ 10, 90, 200, 70}, m_font, U"ReStart", true))
+		if (Button(Rect{ 10, 90, 200, 70}, m_font, U"ReSet", true))
 		{
 			// 処理内容
-			Print << U"Pushed";
+			for (auto& obj : objects)
+			{
+				obj->reset();
+			}
 		}
 		// 設置物をおくところの背景
 		Rect{ 40, 170, 130, 130}.draw();
@@ -982,9 +991,9 @@ public:
 			lines << U"サンプル行 {}"_fmt(i + 1);
 		}
 		// 円と四角形を追加
-		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 200, 200, 40 }));
-		objects.push_back(std::make_shared<DraggableRect>(Rect{ 400, 300, 80, 80 }));
-		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 300, 300, 60 }));
+		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 105, 235, 40 }));
+		objects.push_back(std::make_shared<DraggableRect>(Rect{ 65, 340, 80, 80 }));
+		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 105, 515, 60 }));
 		// 物理ボディ
 		double radius = 10;
 		bodies << MyBody{
@@ -1008,10 +1017,13 @@ public:
 			changeScene(State::Title);
 		}
 		// リスタートボタン
-		if (Button(Rect{ 10, 90, 200, 70}, m_font, U"ReStart", true))
+		if (Button(Rect{ 10, 90, 200, 70}, m_font, U"ReSet", true))
 		{
 			// 処理内容
-			Print << U"Pushed";
+			for (auto& obj : objects)
+			{
+				obj->reset();
+			}
 		}
 		// 設置物をおくところの背景
 		Rect{ 40, 170, 130, 130}.draw();
