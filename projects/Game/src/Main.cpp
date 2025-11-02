@@ -387,12 +387,6 @@ public:
 	{
 		Scene::SetBackground(ColorF{ 0.7, 0.9, 1.0 });
 
-		// 表示するテキスト
-		for (int i = 0; i < 20; ++i)
-		{
-			lines << U"サンプル行 {}"_fmt(i + 1);
-		}
-
 		// 設置オブジェクト
 		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 115, 300, 30 }, world));
 		objects.push_back(std::make_shared<DraggableRect>(Rect{ 85, 390, 60, 60 }, world));
@@ -843,11 +837,6 @@ public:
 		, accumulatedTime(0.0)
 	{
 		Scene::SetBackground(ColorF{ 0.7, 0.9, 1.0 });
-		// 表示するテキストの配列
-		for (int i = 0; i < 20; ++i)
-		{
-			lines << U"サンプル行 {}"_fmt(i + 1);
-		}
 
 		// 円と四角形を追加
 		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 105, 235, 40 }, world));
@@ -1074,11 +1063,7 @@ public:
 		, accumulatedTime(0.0)
 	{
 		Scene::SetBackground(ColorF{ 0.7, 0.9, 1.0 });
-		// 表示するテキストの配列
-		for (int i = 0; i < 20; ++i)
-		{
-			lines << U"サンプル行 {}"_fmt(i + 1);
-		}
+
 		// 円と四角形を追加
 		objects.push_back(std::make_shared<DraggableCircle>(Circle{ 105, 235, 40 }, world));
 		objects.push_back(std::make_shared<DraggableRect>(Rect{ 65, 340, 80, 80 }, world));
