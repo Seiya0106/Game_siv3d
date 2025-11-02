@@ -442,7 +442,7 @@ public:
 				};
 			}
 		}
-		
+	   
 		// 停止判定
 		bool isGameOver = false;
 		static double stopTime = 0.0;
@@ -455,6 +455,7 @@ public:
 				{
 						   
 					isGameOver= true;
+					stopTime = 0.0;
 				}
 			}
 			else
@@ -473,7 +474,12 @@ public:
 		{
 			changeScene(State::GameOver);
 		}
+		//デバック用
+		//Print << isGameOver;
+		//Print << stopTime;
+		
 		//ゴール判定部分
+		
 		
 		//if (条件)
 		//{
