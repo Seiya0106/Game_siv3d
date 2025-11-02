@@ -752,12 +752,6 @@ public:
 
 		ClearPrint();
 
-		// 情報表示
-		for (const auto& b : bodies)
-		{
-			Print << U"ID: {}, Pos: {:.1f}"_fmt(b.body.id(), b.body.getPos());
-		}
-
 		// 物理更新
 		accumulatedTime += Scene::DeltaTime();
 		while (accumulatedTime >= StepTime)
@@ -978,12 +972,6 @@ public:
 
 		ClearPrint();
 
-		// 情報表示
-		for (const auto& b : bodies)
-		{
-			Print << U"ID: {}, Pos: {:.1f}"_fmt(b.body.id(), b.body.getPos());
-		}
-
 		// 物理更新
 		accumulatedTime += Scene::DeltaTime();
 		while (accumulatedTime >= StepTime)
@@ -1201,12 +1189,6 @@ public:
 		}
 
 		ClearPrint();
-
-		// 情報表示
-		for (const auto& b : bodies)
-		{
-			Print << U"ID: {}, Pos: {:.1f}"_fmt(b.body.id(), b.body.getPos());
-		}
 
 		// 物理更新
 		accumulatedTime += Scene::DeltaTime();
