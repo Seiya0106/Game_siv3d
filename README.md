@@ -22,3 +22,4 @@ GameTemplate/
 
 - `GameTemplate/projects/Game/Game.xcodeproj` を開きます
 
+ゲームジャム中に完成させることができませんでした
